@@ -1,0 +1,15 @@
+# 编译与测试中间产物
+tests/*.exe
+tests/*.log
+tests/*.png
+tests/*.txt
+*.pdb
+*.obj
+
+# 驱动压缩包（体积大，安装脚本只需要解压后的目录）
+vdd/*.zip
+
+# 系统与编辑器
+.vs/
+Thumbs.db
+desktop.ini
