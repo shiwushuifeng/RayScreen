@@ -14,3 +14,4 @@ vdd/*.zip
 Thumbs.db
 desktop.ini
 dist/
+tests/run-*.cmd
