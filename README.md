@@ -141,3 +141,9 @@ RayScreen
 ├─ build.cmd            一键编译
 └─ screenshot.png       界面截图
 ```
+
+## 协议
+
+MIT License —— 随便用、随便改，保留版权声明即可，见 [LICENSE](LICENSE)。
+
+`vdd/` 里的虚拟显示驱动来自 [VirtualDrivers/Virtual-Display-Driver](https://github.com/VirtualDrivers/Virtual-Display-Driver)（itsmikethetech，同样是 MIT，驱动已签名，安装时不要求测试签名模式）。

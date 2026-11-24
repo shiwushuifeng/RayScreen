@@ -1,9 +1,12 @@
 // RayScreen — 跑任务时只关屏、不休眠
+// License: MIT（见仓库根目录 LICENSE）
+//
 // 原理：现代待机（S0）机器上，只要 Windows 认为「显示器已关」，就会连带进入连接待机
-//       （表现为风扇停转、指示灯灭、任务被降速）。所以这里反过来做：
-//       一直持有 ES_DISPLAY_REQUIRED（系统认为屏幕必须亮着 → 永不进连接待机），
-//       再把屏幕「变黑」——亮度压到 0 + 盖一层全黑置顶窗口，用户看到的是一块黑屏，
-//       但整机仍在全速运行（风扇照转）。
+//       （事件 Kernel-Power 506，表现为风扇停转、任务被冻结）。所以这里反过来做：
+//       1) 一直持有 ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED，系统认为屏幕必须亮着；
+//       2) 把桌面切到一块虚拟显示器（VDD）上，物理内屏失去信号 → 面板自己断电灭背光；
+//       3) 任意按键 / 鼠标键通过全局钩子触发恢复，切回原来的显示配置。
+//       没有安装 VDD 时回退到旧方案：亮度压 0 + 盖一层全黑置顶窗口。
 // 编译：csc /target:winexe（GUI）与 /define:CLI /target:exe（命令行）
 using System;
 using System.Collections.Generic;

@@ -28,7 +28,7 @@ Write-Host '  跑任务时只关屏幕、不休眠' -ForegroundColor DarkGray
 # ---------- 1. 复制程序 ----------
 Step '复制程序文件'
 if (-not (Test-Path $Dest)) { New-Item -ItemType Directory -Path $Dest -Force | Out-Null }
-foreach ($item in @('bin', 'src', 'vdd', 'README.md', 'LICENSE', 'screenshot.png', 'ray.cmd', 'ray.ps1', 'install.cmd', 'install.ps1', 'uninstall.cmd', 'uninstall.ps1')) {
+foreach ($item in @('bin', 'src', 'vdd', 'README.md', 'AGENTS.md', 'LICENSE', 'screenshot.png', 'ray.cmd', 'ray.ps1', 'install.cmd', 'install.ps1', 'uninstall.cmd', 'uninstall.ps1')) {
     $src = Join-Path $here $item
     if (Test-Path $src) {
         Copy-Item $src -Destination $Dest -Recurse -Force
