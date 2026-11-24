@@ -13,3 +13,4 @@ vdd/*.zip
 .vs/
 Thumbs.db
 desktop.ini
+dist/
