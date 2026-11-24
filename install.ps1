@@ -28,7 +28,7 @@ Write-Host '  跑任务时只关屏幕、不休眠' -ForegroundColor DarkGray
 # ---------- 1. 复制程序 ----------
 Step '复制程序文件'
 if (-not (Test-Path $Dest)) { New-Item -ItemType Directory -Path $Dest -Force | Out-Null }
-foreach ($item in @('bin', 'src', 'vdd', 'README.md', 'LICENSE', 'screenshot.png', 'ray.cmd', 'ray.ps1', 'install.ps1', 'uninstall.ps1')) {
+foreach ($item in @('bin', 'src', 'vdd', 'README.md', 'LICENSE', 'screenshot.png', 'ray.cmd', 'ray.ps1', 'install.cmd', 'install.ps1', 'uninstall.cmd', 'uninstall.ps1')) {
     $src = Join-Path $here $item
     if (Test-Path $src) {
         Copy-Item $src -Destination $Dest -Recurse -Force
@@ -206,29 +206,63 @@ Register-RayTask -TaskName 'RayScreenCli' -ExePath $cli -ArgsLine '--task-host' 
 $legacyRun = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 Remove-ItemProperty -Path $legacyRun -Name 'RayScreen' -ErrorAction SilentlyContinue
 
-# ---------- 4. 快捷方式（走计划任务，双击不会再弹 UAC） ----------
+# ---------- 4. 快捷方式 / 卸载入口 ----------
 if (-not $NoShortcut) {
-    Step '创建快捷方式'
+    Step '创建快捷方式与卸载入口'
     $schtasks = Join-Path $env:SystemRoot 'System32\schtasks.exe'
     $shell = New-Object -ComObject WScript.Shell
-    $targets = @(
-        [Environment]::GetFolderPath('Desktop'),
-        (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs')
-    )
-    foreach ($t in $targets) {
-        if (Test-Path $t) {
-            $lnkPath = Join-Path $t 'RayScreen 关屏不休眠.lnk'
-            $lnk = $shell.CreateShortcut($lnkPath)
-            $lnk.TargetPath = $schtasks
-            $lnk.Arguments = '/run /tn "RayScreen"'
-            $lnk.WindowStyle = 7
-            $lnk.WorkingDirectory = (Join-Path $Dest 'bin')
-            $lnk.IconLocation = "$exe,0"
-            $lnk.Description = '跑任务时只关屏幕、不休眠'
-            $lnk.Save()
-            Ok $lnkPath
-        }
+
+    function New-AppShortcut([string]$path, [string]$desc) {
+        $lnk = $shell.CreateShortcut($path)
+        $lnk.TargetPath = $schtasks
+        $lnk.Arguments = '/run /tn "RayScreen"'
+        $lnk.WindowStyle = 7
+        $lnk.WorkingDirectory = (Join-Path $Dest 'bin')
+        $lnk.IconLocation = "$exe,0"
+        $lnk.Description = $desc
+        $lnk.Save()
+        Ok $path
     }
+
+    # 桌面
+    $desktop = [Environment]::GetFolderPath('Desktop')
+    if (Test-Path $desktop) {
+        New-AppShortcut (Join-Path $desktop 'RayScreen 关屏不休眠.lnk') '跑任务时只关屏幕、不休眠'
+    }
+
+    # 开始菜单文件夹：主程序 + 卸载
+    $startMenu = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs'
+    $folder = Join-Path $startMenu 'RayScreen'
+    New-Item -ItemType Directory -Path $folder -Force | Out-Null
+    New-AppShortcut (Join-Path $folder 'RayScreen 关屏不休眠.lnk') '跑任务时只关屏幕、不休眠'
+
+    $oldTop = Join-Path $startMenu 'RayScreen 关屏不休眠.lnk'
+    if (Test-Path $oldTop) { Remove-Item $oldTop -Force -ErrorAction SilentlyContinue }
+
+    $uninstallCmd = Join-Path $Dest 'uninstall.cmd'
+    if (Test-Path $uninstallCmd) {
+        $u = $shell.CreateShortcut((Join-Path $folder '卸载 RayScreen.lnk'))
+        $u.TargetPath = $uninstallCmd
+        $u.WorkingDirectory = $Dest
+        $u.IconLocation = (Join-Path $env:SystemRoot 'System32\Shell32.dll') + ',131'
+        $u.Description = '卸载 RayScreen（程序、驱动、计划任务全部清理）'
+        $u.Save()
+        Ok (Join-Path $folder '卸载 RayScreen.lnk')
+    }
+
+    # 应用与功能里的卸载入口
+    $uninstKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\RayScreen'
+    New-Item -Path $uninstKey -Force | Out-Null
+    Set-ItemProperty -Path $uninstKey -Name 'DisplayName'     -Value 'RayScreen 关屏不休眠'
+    Set-ItemProperty -Path $uninstKey -Name 'DisplayVersion'  -Value '1.0.0'
+    Set-ItemProperty -Path $uninstKey -Name 'Publisher'       -Value 'shiwushuifeng'
+    Set-ItemProperty -Path $uninstKey -Name 'InstallLocation' -Value $Dest
+    Set-ItemProperty -Path $uninstKey -Name 'DisplayIcon'     -Value $exe
+    Set-ItemProperty -Path $uninstKey -Name 'UninstallString' -Value ('"' + $uninstallCmd + '"')
+    Set-ItemProperty -Path $uninstKey -Name 'NoModify'        -Value 1 -Type DWord
+    Set-ItemProperty -Path $uninstKey -Name 'NoRepair'        -Value 1 -Type DWord
+    Ok '应用与功能中的卸载项'
+
     $rayCmd = Join-Path $Dest 'ray.cmd'
     if (Test-Path $rayCmd) { Ok "命令行入口：$rayCmd" }
 }

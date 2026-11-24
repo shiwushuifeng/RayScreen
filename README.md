@@ -28,10 +28,22 @@
 - 安装虚拟显示驱动（若尚未安装）
 - 创建两个计划任务（`RayScreen` / `RayScreenCli`，最高权限）
 - 桌面 + 开始菜单快捷方式（走计划任务启动，**以后双击不再弹 UAC**）
+- 在「设置 → 应用 → 已安装的应用 / 应用与功能」里登记卸载入口
 - 最后跑一次自检并打印结果
 
 `install.cmd -Startup` 可同时设置开机自启（计划任务加登录触发器）。
-卸载：双击 `uninstall.cmd`（`-KeepDriver` 保留驱动）。
+
+## 卸载（删干净、无残留）
+
+三种入口都行：
+
+- 开始菜单 → `RayScreen` → `卸载 RayScreen`
+- Windows 设置 → 应用 → 已安装的应用 → `RayScreen 关屏不休眠` → 卸载
+- 命令行：`uninstall.cmd`（在安装目录里）
+
+它会结束进程并依次清理：桌面/开始菜单快捷方式、两个计划任务、自启动项、应用列表里的卸载项、虚拟显示设备与它带出来的显示器设备、驱动包（只删 `mttvdd` 那一个，不碰别的 `oemNN.inf`）、`C:\VirtualDisplayDriver`、`C:\ProgramData\RayScreen`、`%LOCALAPPDATA%\RayScreen`、程序目录。最后做一遍**残留检查**，全清才打印「没有残留」并以 0 退出。
+
+`uninstall.cmd -KeepDriver` 保留虚拟显示驱动（只删程序和快捷方式）。
 
 ## 用法
 
