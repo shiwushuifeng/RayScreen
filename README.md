@@ -4,6 +4,8 @@
 
 ![界面](screenshot.png)
 
+> 接手的 AI / 开发者请先读 [AGENTS.md](AGENTS.md)：里面记录了架构、构建测试命令、踩过的坑和发布流程。
+
 ## 为什么不是「让 Windows 关屏」
 
 这台机器是 **S0 现代待机（Modern Standby）** 机型。用常规办法关屏——`SC_MONITORPOWER` 广播、电源计划里的「关闭显示器」超时、合盖——Windows 会把「屏幕熄灭」当成「用户离开」，**立刻进入连接待机**：风扇停转、任务被冻结，内核电源事件日志里是一条 `Kernel-Power 506 原因: SC_MONITORPOWER`。
